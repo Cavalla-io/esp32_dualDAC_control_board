@@ -1,6 +1,6 @@
 # ESP32 Dual DAC control boards
 
-These boards are meant to replicate analog signals sent by anything not controlled over the can bus or with pwm. There is one main file esp32_dual_dac_base.ino, that you may build any special behaviors off of.
+These boards are meant to replicate analog signals sent by anything not controlled over the can bus or with pwm. There is one main file [esp32_dual_dac_base.ino](https://github.com/Cavalla-io/esp32_dualDAC_control_board/blob/main/esp32_double_dac_base.ino), that you may build any special behaviors off of.
 
 ## Board Layout
 The current layout consists of 1 esp32 dev kit and 2 MCP4921 DACs.
