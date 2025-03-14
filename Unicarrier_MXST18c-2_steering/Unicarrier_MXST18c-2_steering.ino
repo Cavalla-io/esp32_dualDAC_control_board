@@ -8,7 +8,8 @@ float voltage2 = 3.4;
 bool increasing1 = true;
 bool increasing2 = true;
 bool shouldUpdate = false;  // Controls if voltages should update
-unsigned long lastToggleTime = 0;  // Track when to reverse steering
+unsigned long lastInputTime = 0;  // Track last input time
+const unsigned long inputTimeout = 200;  // 0.2 second timeout
 
 void setup()
 {
@@ -46,15 +47,28 @@ void loop()
   // Check for keyboard control via Serial
   if (Serial.available() > 0) {
     char command = Serial.read();
+    
     if (command == 'r') {  // Manual steering reversal
       increasing1 = !increasing1;
       increasing2 = !increasing2;
       Serial.println("Manual Steering Direction Reversed!");
-    } else if (command == 'p') {  // Key pressed -> Start voltage updates
+    } 
+    else if (command == 'p') {  // Key pressed -> Start voltage updates
       shouldUpdate = true;
-    } else if (command == 's') {  // Key released -> Stop voltage updates
+      lastInputTime = millis();  // Reset timeout
+    } 
+    else if (command == 's') {  // Key released -> Stop voltage updates
       shouldUpdate = false;
     }
+
+    lastInputTime = millis(); // Reset timeout on any input
+  }
+
+  // Timeout condition: stop updates if no input for 2 seconds
+  if (millis() - lastInputTime > inputTimeout) {
+    shouldUpdate = false;
+    Serial.println("No input received for 0.2 seconds. Steering updates stopped.");
+    lastInputTime = millis();  // Reset to prevent continuous messages
   }
 
   Serial.print("DAC1 Voltage: ");
@@ -63,7 +77,7 @@ void loop()
   Serial.print(voltage2);
   Serial.println("V");
 
-  // Only update voltages if a key is being held
+  // Only update voltages if allowed
   if (shouldUpdate) {
     // Update DAC1
     if (increasing1) {
@@ -71,7 +85,7 @@ void loop()
       if (voltage1 >= 4.45) increasing1 = false;
     } else {
       voltage1 -= 0.02;
-      if (voltage1 <= 0.55) increasing1 = true;
+      if (voltage1 <= 0.60) increasing1 = true;
     }
 
     // Update DAC2
@@ -80,7 +94,7 @@ void loop()
       if (voltage2 >= 4.45) increasing2 = false;
     } else {
       voltage2 -= 0.02;
-      if (voltage2 <= 0.55) increasing2 = true;
+      if (voltage2 <= 0.60) increasing2 = true;
     }
 
     // Apply voltages to DACs

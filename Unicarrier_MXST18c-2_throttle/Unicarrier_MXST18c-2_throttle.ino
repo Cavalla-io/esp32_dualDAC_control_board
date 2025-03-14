@@ -6,6 +6,8 @@
 float voltage1 = 4.5;
 float voltage2 = 0.5;
 bool shouldMoveToNeutral = false;  // Track if we are transitioning to 2.5V
+unsigned long lastInputTime = 0;  // Track last input time
+const unsigned long inputTimeout = 200;  // 2-second timeout
 
 void setup()
 { 
@@ -43,13 +45,22 @@ void setDACVoltage(uint8_t csPin, float voltage)
 void loop()
 {
   // Check for serial commands (keyboard control)
-  if (Serial.available() > 0) {
-    char command = Serial.read();
-    if (command == 'p') {  // Key `W` pressed -> Move both DACs to 2.5V
+  if (command == 'p') {  // Key pressed -> Move both DACs to 2.5V
       shouldMoveToNeutral = true;
+      lastInputTime = millis();  // Reset timeout
     } else if (command == 's') {  // Key released -> Return to default state
       shouldMoveToNeutral = false;
+      lastInputTime = millis();  // Reset timeout
     }
+
+    lastInputTime = millis();  // Update last input time
+  }
+
+  // If no input received for 0.2 seconds, stop moving
+  if (millis() - lastInputTime > inputTimeout) {
+    shouldMoveToNeutral = false;
+    Serial.println("No input for 0.2 seconds.");
+    lastInputTime = millis();  // Reset to prevent continuous messages
   }
 
   // Smoothly transition voltages
