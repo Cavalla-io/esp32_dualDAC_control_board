@@ -68,7 +68,7 @@ void loop()
   if (millis() - lastInputTime > inputTimeout) {
     shouldUpdate = false;
     Serial.println("No input received for 0.2 seconds. Steering updates stopped.");
-    // lastInputTime = millis(); Reset to prevent continuous messages
+    //lastInputTime = millis();
   }
 
   Serial.print("DAC1 Voltage: ");

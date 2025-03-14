@@ -45,7 +45,9 @@ void setDACVoltage(uint8_t csPin, float voltage)
 void loop()
 {
   // Check for serial commands (keyboard control)
-  if (command == 'p') {  // Key pressed -> Move both DACs to 2.5V
+  if (Serial.available() > 0) {
+    char command = Serial.read();
+    if (command == 'p') {  // Key `W` pressed -> Move both DACs to 2.5V
       shouldMoveToNeutral = true;
       lastInputTime = millis();  // Reset timeout
     } else if (command == 's') {  // Key released -> Return to default state
@@ -60,7 +62,7 @@ void loop()
   if (millis() - lastInputTime > inputTimeout) {
     shouldMoveToNeutral = false;
     Serial.println("No input for 0.2 seconds.");
-    lastInputTime = millis();  // Reset to prevent continuous messages
+    //lastInputTime = millis();
   }
 
   // Smoothly transition voltages
