@@ -3,11 +3,11 @@
 #define MCP4921_CS1_PIN  5  // Chip Select for DAC 1
 #define MCP4921_CS2_PIN  4  // Chip Select for DAC 2
 
-float voltage1 = 4.5;
-float voltage2 = 0.5;
-bool shouldMoveToNeutral = false;  // Track if we are transitioning to 2.5V
+float voltage1 = 4.5;  // Initial voltage (no throttle)
+float voltage2 = 0.5;  // Initial voltage (no throttle)
+float targetVoltage1 = 4.5;  // Target voltage based on throttle input
 unsigned long lastInputTime = 0;  // Track last input time
-const unsigned long inputTimeout = 200;  // 2-second timeout
+const unsigned long inputTimeout = 200;  // 0.2-second timeout
 
 void setup()
 { 
@@ -46,32 +46,25 @@ void loop()
 {
   // Check for serial commands (keyboard control)
   if (Serial.available() > 0) {
-    char command = Serial.read();
-    if (command == 'p') {  // Key `W` pressed -> Move both DACs to 2.5V
-      shouldMoveToNeutral = true;
-      lastInputTime = millis();  // Reset timeout
-    } else if (command == 's') {  // Key released -> Return to default state
-      shouldMoveToNeutral = false;
-      lastInputTime = millis();  // Reset timeout
+    float throttle = Serial.parseFloat();
+    if (throttle >= 0.0 && throttle <= 1.0) {
+      // Map throttle (0-1) to voltage1 (4.5V to 0.5V)
+      targetVoltage1 = 4.5 - (throttle * 4.0);  // 4.0V range from 4.5V to 0.5V
+      lastInputTime = millis();
     }
-
-    lastInputTime = millis();  // Update last input time
   }
 
-  // If no input received for 0.2 seconds, stop moving
+  // If no input received for 0.2 seconds, return to no throttle
   if (millis() - lastInputTime > inputTimeout) {
-    shouldMoveToNeutral = false;
+    targetVoltage1 = 4.5;  // Return to no throttle position
     Serial.println("No input for 0.2 seconds.");
-    //lastInputTime = millis();
   }
 
   // Smoothly transition voltages
-  if (shouldMoveToNeutral) {
-    if (voltage1 > 2.5) voltage1 -= 0.02;
-    if (voltage1 < 2.5) voltage1 += 0.02;
-  } else {
-    if (voltage1 < 4.5) voltage1 += 0.02;
-    if (voltage1 > 4.5) voltage1 -= 0.02;
+  if (voltage1 > targetVoltage1) {
+    voltage1 -= 0.02;
+  } else if (voltage1 < targetVoltage1) {
+    voltage1 += 0.02;
   }
 
   // Set DAC2 to always be the opposite of DAC1
