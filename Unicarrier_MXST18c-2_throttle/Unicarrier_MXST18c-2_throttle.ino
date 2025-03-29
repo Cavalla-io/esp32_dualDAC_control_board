@@ -12,7 +12,7 @@ const unsigned long inputTimeout = 200;  // 0.2-second timeout
 void setup()
 { 
   Serial.begin(230400);
-  Serial.println("ESP32 MCP4921 DAC Control");
+  //Serial.println("ESP32 MCP4921 DAC Control");
 
   pinMode(MCP4921_CS1_PIN, OUTPUT);
   pinMode(MCP4921_CS2_PIN, OUTPUT);
@@ -45,19 +45,19 @@ void setDACVoltage(uint8_t csPin, float voltage)
 void loop()
 {
   // Check for serial commands (keyboard control)
-  if (Serial.available() > 0) {
-    float throttle = Serial.parseFloat();
-    if (throttle >= 0.0 && throttle <= 1.0) {
-      // Map throttle (0-1) to voltage1 (4.5V to 0.5V)
-      targetVoltage1 = 4.5 - (throttle * 4.0);  // 4.0V range from 4.5V to 0.5V
-      lastInputTime = millis();
-    }
+  if (Serial.available()) {
+  String input = Serial.readStringUntil('\n');
+  float throttle = input.toFloat();
+  if (throttle >= 0.0 && throttle <= 1.0) {
+    targetVoltage1 = 4.5 - (throttle * 4.0);
+    lastInputTime = millis();
   }
+}
 
   // If no input received for 0.2 seconds, return to no throttle
   if (millis() - lastInputTime > inputTimeout) {
     targetVoltage1 = 4.5;  // Return to no throttle position
-    Serial.println("No input for 0.2 seconds.");
+    //Serial.println("No input for 0.2 seconds.");
   }
 
   // Smoothly transition voltages
