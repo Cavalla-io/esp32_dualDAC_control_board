@@ -44,15 +44,23 @@ void setDACVoltage(uint8_t csPin, float voltage)
 
 void loop()
 {
-  // Check for serial commands (keyboard control)
+  // Check for serial commands
   if (Serial.available()) {
-  String input = Serial.readStringUntil('\n');
-  float throttle = input.toFloat();
-  if (throttle >= 0.0 && throttle <= 1.0) {
-    targetVoltage1 = 4.5 - (throttle * 4.0);
-    lastInputTime = millis();
+    // Check for single character commands first
+    if (Serial.peek() == 'i') {
+      Serial.read(); // Consume the 'i'
+      Serial.println("throttle");
+    }
+    else {
+      // Process throttle values
+      String input = Serial.readStringUntil('\n');
+      float throttle = input.toFloat();
+      if (throttle >= 0.0 && throttle <= 1.0) {
+        targetVoltage1 = 4.5 - (throttle * 4.0);
+        lastInputTime = millis();
+      }
+    }
   }
-}
 
   // If no input received for 0.2 seconds, return to no throttle
   if (millis() - lastInputTime > inputTimeout) {
