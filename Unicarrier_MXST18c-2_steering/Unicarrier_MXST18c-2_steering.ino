@@ -2,6 +2,7 @@
 
 #define MCP4921_CS1_PIN  5  // Chip Select for DAC 1
 #define MCP4921_CS2_PIN  4  // Chip Select for DAC 2
+#define REMOTE_START_PIN 2 // Remote start pin
 
 float voltage1 = 1.4;
 float voltage2 = 3.4;
@@ -16,8 +17,10 @@ void setup()
 
   pinMode(MCP4921_CS1_PIN, OUTPUT);
   pinMode(MCP4921_CS2_PIN, OUTPUT);
+  pinMode(REMOTE_START_PIN, OUTPUT);
   digitalWrite(MCP4921_CS1_PIN, HIGH);
   digitalWrite(MCP4921_CS2_PIN, HIGH);
+  digitalWrite(REMOTE_START_PIN, LOW);  // Initialize to OFF state
 
   SPI.begin(18, -1, 23, -1);  // Initialize VSPI
   setDACVoltage(MCP4921_CS1_PIN, voltage1);
@@ -50,7 +53,11 @@ void loop()
     if (command == 'i') {
       Serial.println("steering");
     }
-    else if (command == 'r') {  // Manual steering reversal
+    else if (command == 'c') { // set remote start to close (forklift is on)
+      digitalWrite(REMOTE_START_PIN, HIGH);
+    } else if (command == 'o') { // set remote start to open (forklift is off)
+      digitalWrite(REMOTE_START_PIN, LOW);
+    } else if (command == 'r') {  // Manual steering reversal
       increasing1 = !increasing1;
       increasing2 = !increasing2;
     } else if (command == 'p') {  // Key pressed -> Start voltage updates
