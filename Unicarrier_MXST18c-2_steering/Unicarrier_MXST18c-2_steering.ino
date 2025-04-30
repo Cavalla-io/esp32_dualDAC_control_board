@@ -67,7 +67,11 @@ void loop()
     }
   }
 
-  // Only update voltages if a key is being held
+  // Always set the current voltages to maintain them
+  setDACVoltage(MCP4921_CS1_PIN, voltage1);
+  setDACVoltage(MCP4921_CS2_PIN, voltage2);
+
+  // Only update voltage values if a key is being held
   if (shouldUpdate) {
     // Update DAC1
     if (increasing1) {
@@ -86,14 +90,5 @@ void loop()
       voltage2 -= 0.02;
       if (voltage2 <= 0.55) increasing2 = true;
     }
-
-    // Apply voltages to DACs
-    setDACVoltage(MCP4921_CS1_PIN, voltage1);
-    setDACVoltage(MCP4921_CS2_PIN, voltage2);
   }
 }
-// When plugged in after forklift turns on the steering voltages are set just fine but 
-// if it had already been plugged in before forklift turns on the steering voltages are both set to around 3.5v
-// This is likely due to the fact that before the forklift is started the voltage powering the dacs from the forklift
-// (meaning what is on the terminals) is ~2v
-// making the voltages end up closer together when powered with a higher voltage
