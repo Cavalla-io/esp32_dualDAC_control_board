@@ -12,7 +12,7 @@ unsigned long lastToggleTime = 0;  // Track when to reverse steering
 
 void setup()
 {
-  Serial.begin(230400);
+  Serial.begin(115200);
 
   pinMode(MCP4921_CS1_PIN, OUTPUT);
   pinMode(MCP4921_CS2_PIN, OUTPUT);
@@ -42,35 +42,25 @@ void setDACVoltage(uint8_t csPin, float voltage)
 
 void loop()
 {
-  // Check for serial commands
-  if (Serial.available()) {
-    // Check for single character commands first
-    if (Serial.peek() == 'i') {
-      Serial.read(); // Consume the 'i'
+  // Check for keyboard control via Serial
+  if (Serial.available() > 0) {
+    char command = Serial.read();
+    
+    // Check for the 'i' character to identify device
+    if (command == 'i') {
       Serial.println("steering");
     }
-    else if (Serial.peek() == 'r') {
-      Serial.read(); // Consume the 'r'
+    else if (command == 'r') {  // Manual steering reversal
       increasing1 = !increasing1;
       increasing2 = !increasing2;
-    }
-    else if (Serial.peek() == 'p') {
-      Serial.read(); // Consume the 'p'
+    } else if (command == 'p') {  // Key pressed -> Start voltage updates
       shouldUpdate = true;
-    }
-    else if (Serial.peek() == 's') {
-      Serial.read(); // Consume the 's'
+    } else if (command == 's') {  // Key released -> Stop voltage updates
       shouldUpdate = false;
-    }
-    else {
-      // If not a single character command, clear the buffer
-      while (Serial.available()) {
-        Serial.read();
-      }
     }
   }
 
-  // Only update voltage values if a key is being held
+  // Only update voltages if a key is being held
   if (shouldUpdate) {
     // Update DAC1
     if (increasing1) {
@@ -78,7 +68,7 @@ void loop()
       if (voltage1 >= 4.45) increasing1 = false;
     } else {
       voltage1 -= 0.02;
-      if (voltage1 <= 0.55) increasing1 = true;
+      if (voltage1 <= 0.60) increasing1 = true;
     }
 
     // Update DAC2
@@ -87,11 +77,12 @@ void loop()
       if (voltage2 >= 4.45) increasing2 = false;
     } else {
       voltage2 -= 0.02;
-      if (voltage2 <= 0.55) increasing2 = true;
+      if (voltage2 <= 0.60) increasing2 = true;
     }
   }
 
-  // Always set the current voltages to maintain them
+  // Apply voltages to DACs
   setDACVoltage(MCP4921_CS1_PIN, voltage1);
   setDACVoltage(MCP4921_CS2_PIN, voltage2);
+  delay(10);  // Small delay to prevent voltage settling
 }
