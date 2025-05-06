@@ -84,5 +84,5 @@ void loop()
   // Apply voltages to DACs
   setDACVoltage(MCP4921_CS1_PIN, voltage1);
   setDACVoltage(MCP4921_CS2_PIN, voltage2);
-  delay(1);  // Small delay to prevent voltage settling
+  delay(3);  // Small delay to prevent voltage settling
 }
